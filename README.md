@@ -30,9 +30,9 @@ Employee submits expense → Manager reviews → Approve / Reject → Status upd
 ---
 
 ## 👥 Team
-- **Mayuri Chavan**  
-- **Raj Patil**  
-- **Mayur Kolekar**  
-- **Mittal Shisode**
+- **Mayuri Chavan.** 
+- **Raj Patil.**  
+- **Mayur Kolekar.**  
+- **Mittal Shisode.**
 
 ---
