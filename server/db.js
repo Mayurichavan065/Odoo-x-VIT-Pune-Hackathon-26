@@ -24,7 +24,7 @@ function initDB() {
     CREATE TABLE IF NOT EXISTS companies (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      base_currency TEXT DEFAULT 'USD',
+      base_currency TEXT DEFAULT 'INR',
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -47,7 +47,7 @@ function initDB() {
       title TEXT NOT NULL,
       description TEXT,
       total_amount REAL NOT NULL DEFAULT 0,
-      currency TEXT DEFAULT 'USD',
+      currency TEXT DEFAULT 'INR',
       converted_amount REAL,
       category TEXT NOT NULL,
       status TEXT DEFAULT 'draft' CHECK(status IN ('draft','pending','in_review','approved','rejected','paid')),

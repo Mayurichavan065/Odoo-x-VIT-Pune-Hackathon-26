@@ -10,7 +10,7 @@ async function seed() {
 
   // Create company
   const companyId = uuidv4();
-  db.prepare('INSERT OR IGNORE INTO companies (id, name, base_currency) VALUES (?, ?, ?)').run(companyId, 'Acme Corp', 'USD');
+  db.prepare('INSERT OR IGNORE INTO companies (id, name, base_currency) VALUES (?, ?, ?)').run(companyId, 'Acme Corp', 'INR');
 
   // Create users
   const pwd = await bcrypt.hash('password123', 10);
@@ -24,14 +24,14 @@ async function seed() {
 
   // Create expenses
   const expenses = [
-    { title: 'Business Trip to NYC', category: 'Travel', amount: 1250.00, status: 'approved' },
-    { title: 'Client Lunch Meeting', category: 'Meals', amount: 85.50, status: 'approved' },
-    { title: 'New Laptop Setup', category: 'Equipment', amount: 2100.00, status: 'in_review' },
-    { title: 'Conference Registration', category: 'Travel', amount: 599.00, status: 'in_review' },
-    { title: 'Office Supplies Q4', category: 'Supplies', amount: 234.75, status: 'pending' },
-    { title: 'Airport Parking', category: 'Travel', amount: 45.00, status: 'approved' },
-    { title: 'Team Dinner', category: 'Meals', amount: 312.00, status: 'rejected' },
-    { title: 'Software License', category: 'Equipment', amount: 499.99, status: 'approved' },
+    { title: 'Train to Mumbai', category: 'Travel', amount: 4500.00, status: 'approved' },
+    { title: 'Client Lunch Meeting', category: 'Meals', amount: 850.00, status: 'approved' },
+    { title: 'Keyboard & Mouse', category: 'Equipment', amount: 2100.00, status: 'in_review' },
+    { title: 'Workshop Fee', category: 'Travel', amount: 1500.00, status: 'in_review' },
+    { title: 'Office Supplies Q4', category: 'Supplies', amount: 850.00, status: 'pending' },
+    { title: 'Station Parking', category: 'Travel', amount: 150.00, status: 'approved' },
+    { title: 'Team Snacks', category: 'Meals', amount: 1200.00, status: 'rejected' },
+    { title: 'Github Copilot License', category: 'Equipment', amount: 2500.00, status: 'approved' },
   ];
 
   const insertExpense = db.prepare('INSERT INTO expenses (id, title, description, total_amount, currency, converted_amount, category, status, submitted_by, company_id, submitted_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\', ?), datetime(\'now\', ?))');
@@ -42,7 +42,7 @@ async function seed() {
     const eid = uuidv4();
     const submitter = i % 2 === 0 ? empId : emp2Id;
     const dayOffset = `-${i * 3} days`;
-    insertExpense.run(eid, exp.title, `Auto-generated seed expense #${i + 1}`, exp.amount, 'USD', exp.amount, exp.category, exp.status, submitter, companyId, dayOffset, dayOffset);
+    insertExpense.run(eid, exp.title, `Auto-generated seed expense #${i + 1}`, exp.amount, 'INR', exp.amount, exp.category, exp.status, submitter, companyId, dayOffset, dayOffset);
     insertLine.run(uuidv4(), eid, exp.title, exp.amount, exp.category, new Date().toISOString().split('T')[0]);
 
     // Approval steps
@@ -61,9 +61,9 @@ async function seed() {
   });
 
   // Approval rules
-  db.prepare('INSERT INTO approval_rules (id, company_id, name, rule_type, auto_approve_below, is_active, priority) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), companyId, 'Auto-approve < $50', 'auto_approve', 50, 1, 1);
+  db.prepare('INSERT INTO approval_rules (id, company_id, name, rule_type, auto_approve_below, is_active, priority) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), companyId, 'Auto-approve < ₹2000', 'auto_approve', 2000, 1, 1);
   db.prepare('INSERT INTO approval_rules (id, company_id, name, rule_type, percentage_threshold, is_active, priority) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), companyId, '75% Approval Rule', 'percentage', 75, 1, 2);
-  db.prepare('INSERT INTO approval_rules (id, company_id, name, rule_type, auto_approve_below, percentage_threshold, is_active, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), companyId, 'Hybrid: Auto < $100 or 80%', 'hybrid', 100, 80, 1, 3);
+  db.prepare('INSERT INTO approval_rules (id, company_id, name, rule_type, auto_approve_below, percentage_threshold, is_active, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(uuidv4(), companyId, 'Hybrid: Auto < ₹5000 or 80%', 'hybrid', 5000, 80, 1, 3);
 
   console.log('✅ Seed complete!');
   console.log('');

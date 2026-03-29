@@ -37,7 +37,7 @@ router.post('/', authenticateToken, (req, res) => {
   );
 
   const transaction = db.transaction(() => {
-    insertExpense.run(expenseId, title, description || '', total, currency || 'USD', converted_amount, category, req.user.id, req.user.company_id, receipt_path || null, receipt_ocr_data || null);
+    insertExpense.run(expenseId, title, description || '', total, currency || 'INR', converted_amount, category, req.user.id, req.user.company_id, receipt_path || null, receipt_ocr_data || null);
 
     for (const item of line_items) {
       insertLine.run(uuidv4(), expenseId, item.description, parseFloat(item.amount), item.category || category, item.date || null);
@@ -81,7 +81,7 @@ function createApprovalWorkflow(db, expenseId, submitterId, companyId, amount) {
     "SELECT id FROM users WHERE company_id = ? AND role = 'admin' AND id != ? LIMIT 1"
   ).all(companyId, submitterId);
 
-  if (amount > 500 && admins.length > 0) {
+  if (amount > 25000 && admins.length > 0) {
     db.prepare(
       'INSERT INTO approval_steps (id, expense_id, step_order, approver_id) VALUES (?, ?, ?, ?)'
     ).run(uuidv4(), expenseId, stepOrder++, admins[0].id);

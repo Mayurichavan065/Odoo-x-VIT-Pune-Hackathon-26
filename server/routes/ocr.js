@@ -32,12 +32,12 @@ router.post('/upload', authenticateToken, upload.single('receipt'), (req, res) =
 
   // Mock OCR - simulate extracting data from receipt
   const mockOCRResults = [
-    { vendor: 'Uber Technologies', amount: 45.50, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Airport transfer to hotel' },
-    { vendor: 'Hilton Hotels', amount: 289.00, category: 'Accommodation', date: new Date().toISOString().split('T')[0], description: 'Business trip accommodation - 1 night' },
-    { vendor: 'Starbucks Coffee', amount: 12.75, category: 'Meals', date: new Date().toISOString().split('T')[0], description: 'Client meeting refreshments' },
-    { vendor: 'Office Depot', amount: 156.30, category: 'Supplies', date: new Date().toISOString().split('T')[0], description: 'Office supplies - printer cartridges' },
-    { vendor: 'Delta Airlines', amount: 534.00, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Round trip flight SFO to NYC' },
-    { vendor: 'Amazon Web Services', amount: 210.00, category: 'Equipment', date: new Date().toISOString().split('T')[0], description: 'Cloud hosting monthly fee' }
+    { vendor: 'Ola Cabs', amount: 450, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Cab to office' },
+    { vendor: 'OYO Rooms', amount: 2500, category: 'Accommodation', date: new Date().toISOString().split('T')[0], description: '1 night stay' },
+    { vendor: 'Chai Point', amount: 150, category: 'Meals', date: new Date().toISOString().split('T')[0], description: 'Coffee with client' },
+    { vendor: 'Reliance Digital', amount: 840, category: 'Supplies', date: new Date().toISOString().split('T')[0], description: 'Printer cartridges' },
+    { vendor: 'RedBus', amount: 1550, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Bus from BOM to PUNE' },
+    { vendor: 'AWS', amount: 1800, category: 'Equipment', date: new Date().toISOString().split('T')[0], description: 'Server hosting monthly' }
   ];
 
   const result = mockOCRResults[Math.floor(Math.random() * mockOCRResults.length)];
@@ -47,7 +47,7 @@ router.post('/upload', authenticateToken, upload.single('receipt'), (req, res) =
     ocr_data: {
       ...result,
       confidence: 0.92,
-      raw_text: `Receipt from ${result.vendor}\nAmount: $${result.amount}\nDate: ${result.date}`
+      raw_text: `Receipt from ${result.vendor}\nAmount: ₹${result.amount}\nDate: ${result.date}`
     }
   });
 });

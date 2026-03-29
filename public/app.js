@@ -38,9 +38,9 @@ function showToast(message, type = 'info') {
 }
 
 // ─── Format Helpers ───
-function formatCurrency(amount, currency = 'USD') {
+function formatCurrency(amount, currency = 'INR') {
   const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹', JPY: '¥', CAD: 'C$', AUD: 'A$', CHF: 'CHF', CNY: '¥', SGD: 'S$' };
-  return `${symbols[currency] || '$'}${parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${symbols[currency] || '₹'}${parseFloat(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatDate(dateStr) {
@@ -599,12 +599,12 @@ async function renderNewExpense() {
           <div class="form-group">
             <label class="form-label" for="expCurrency">Currency</label>
             <select class="form-select" id="expCurrency">
-              ${currencies.map(c => `<option value="${c.code}" ${c.code === 'USD' ? 'selected' : ''}>${c.symbol} ${c.code} — ${c.name}</option>`).join('')}
+              ${currencies.map(c => `<option value="${c.code}" ${c.code === 'INR' ? 'selected' : ''}>${c.symbol} ${c.code} — ${c.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Total Amount</label>
-            <input class="form-input" type="text" id="expTotal" readonly style="font-weight:700;font-size:1.1rem" value="$0.00">
+            <input class="form-input" type="text" id="expTotal" readonly style="font-weight:700;font-size:1.1rem" value="₹0.00">
           </div>
         </div>
         <div class="form-group">

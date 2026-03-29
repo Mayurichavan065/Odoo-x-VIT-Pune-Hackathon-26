@@ -1,0 +1,12 @@
+const { getDB, initDB } = require('./server/db');
+initDB();
+const db = getDB();
+console.log('Clearing old data...');
+db.exec('DELETE FROM approval_steps;');
+db.exec('DELETE FROM expense_lines;');
+db.exec('DELETE FROM expenses;');
+db.exec('DELETE FROM approval_rules;');
+db.exec('UPDATE users SET manager_id = NULL;');
+db.exec('DELETE FROM users;');
+db.exec('DELETE FROM companies;');
+console.log('Data cleared.');
