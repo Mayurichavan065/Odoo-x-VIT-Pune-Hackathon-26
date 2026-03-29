@@ -33,11 +33,9 @@ router.post('/upload', authenticateToken, upload.single('receipt'), (req, res) =
   // Mock OCR - simulate extracting data from receipt
   const mockOCRResults = [
     { vendor: 'Ola Cabs', amount: 450, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Cab to office' },
-    { vendor: 'OYO Rooms', amount: 2500, category: 'Accommodation', date: new Date().toISOString().split('T')[0], description: '1 night stay' },
     { vendor: 'Chai Point', amount: 150, category: 'Meals', date: new Date().toISOString().split('T')[0], description: 'Coffee with client' },
     { vendor: 'Reliance Digital', amount: 840, category: 'Supplies', date: new Date().toISOString().split('T')[0], description: 'Printer cartridges' },
-    { vendor: 'RedBus', amount: 1550, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Bus from BOM to PUNE' },
-    { vendor: 'AWS', amount: 1800, category: 'Equipment', date: new Date().toISOString().split('T')[0], description: 'Server hosting monthly' }
+    { vendor: 'RedBus', amount: 1550, category: 'Travel', date: new Date().toISOString().split('T')[0], description: 'Bus from BOM to PUNE' }
   ];
 
   const result = mockOCRResults[Math.floor(Math.random() * mockOCRResults.length)];
