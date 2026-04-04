@@ -3,64 +3,116 @@
    SPA with router, auth, and all screens
    ═══════════════════════════════════════════════ */
 
-const API = '';
+const API = "";
 let currentUser = null;
-let authToken = localStorage.getItem('rf_token');
+let authToken = localStorage.getItem("rf_token");
 
 // ─── API Helper ───
 async function api(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-  const res = await fetch(`${API}${path}`, { ...options, headers: { ...headers, ...options.headers } });
-  if (res.status === 401 || res.status === 403) { logout(); return null; }
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers: { ...headers, ...options.headers },
+  });
+  if (res.status === 401 || res.status === 403) {
+    logout();
+    return null;
+  }
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
 }
 
 async function apiUpload(path, formData) {
   const headers = {};
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-  const res = await fetch(`${API}${path}`, { method: 'POST', headers, body: formData });
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(`${API}${path}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
   return res.json();
 }
 
 // ─── Toast Notifications ───
-function showToast(message, type = 'info') {
-  let container = document.querySelector('.toast-container');
-  if (!container) { container = document.createElement('div'); container.className = 'toast-container'; document.body.appendChild(container); }
-  const icons = { success: '✓', error: '✕', info: 'ℹ' };
-  const toast = document.createElement('div');
+function showToast(message, type = "info") {
+  let container = document.querySelector(".toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+  const icons = { success: "✓", error: "✕", info: "ℹ" };
+  const toast = document.createElement("div");
   toast.className = `toast toast--${type}`;
   toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(30px)'; setTimeout(() => toast.remove(), 300); }, 3500);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(30px)";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }
 
 // ─── Format Helpers ───
-function formatCurrency(amount, currency = 'INR') {
-  const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹', JPY: '¥', CAD: 'C$', AUD: 'A$', CHF: 'CHF', CNY: '¥', SGD: 'S$' };
-  return `${symbols[currency] || '₹'}${parseFloat(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatCurrency(amount, currency = "INR") {
+  const symbols = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    INR: "₹",
+    JPY: "¥",
+    CAD: "C$",
+    AUD: "A$",
+    CHF: "CHF",
+    CNY: "¥",
+    SGD: "S$",
+  };
+  return `${symbols[currency] || "₹"}${parseFloat(amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function getInitials(name) {
-  return (name || '??').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  return (name || "??")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 function getStatusLabel(status) {
-  const labels = { draft: 'Draft', pending: 'Pending', in_review: 'In Review', approved: 'Approved', rejected: 'Rejected', paid: 'Paid' };
+  const labels = {
+    draft: "Draft",
+    pending: "Pending",
+    in_review: "In Review",
+    approved: "Approved",
+    rejected: "Rejected",
+    paid: "Paid",
+  };
   return labels[status] || status;
 }
 
-const categoryIcons = { Travel: '✈️', Meals: '🍽️', Supplies: '📦', Equipment: '💻', Accommodation: '🏨', Other: '📋' };
+const categoryIcons = {
+  Travel: "✈️",
+  Meals: "🍽️",
+  Supplies: "📦",
+  Equipment: "💻",
+  Accommodation: "🏨",
+  Other: "📋",
+};
 
 // ─── Router ───
-let currentPage = 'dashboard';
+let currentPage = "dashboard";
 
 function navigate(page) {
   currentPage = page;
@@ -69,7 +121,7 @@ function navigate(page) {
 
 // ─── Auth ───
 function logout() {
-  localStorage.removeItem('rf_token');
+  localStorage.removeItem("rf_token");
   authToken = null;
   currentUser = null;
   render();
@@ -78,14 +130,17 @@ function logout() {
 async function checkAuth() {
   if (!authToken) return false;
   try {
-    currentUser = await api('/api/auth/me');
+    currentUser = await api("/api/auth/me");
     return !!currentUser;
-  } catch { logout(); return false; }
+  } catch {
+    logout();
+    return false;
+  }
 }
 
 // ─── Main Render ───
 async function render() {
-  const app = document.getElementById('app');
+  const app = document.getElementById("app");
   if (!authToken || !currentUser) {
     app.innerHTML = renderAuthPage();
     bindAuthEvents();
@@ -102,20 +157,47 @@ async function render() {
 }
 
 async function renderPage() {
-  const main = document.getElementById('mainContent');
+  const main = document.getElementById("mainContent");
   if (!main) return;
-  main.innerHTML = '<div class="loading-page"><div class="spinner"></div><span>Loading...</span></div>';
+  main.innerHTML =
+    '<div class="loading-page"><div class="spinner"></div><span>Loading...</span></div>';
 
   try {
     switch (currentPage) {
-      case 'dashboard': main.innerHTML = await renderDashboard(); bindDashboardEvents(); break;
-      case 'expenses': main.innerHTML = await renderExpenses(); bindExpenseEvents(); break;
-      case 'new-expense': main.innerHTML = await renderNewExpense(); bindNewExpenseEvents(); break;
-      case 'approvals': main.innerHTML = await renderApprovals(); bindApprovalEvents(); break;
-      case 'users': main.innerHTML = await renderUsers(); bindUserEvents(); break;
-      case 'rules': main.innerHTML = await renderRules(); bindRuleEvents(); break;
-      case 'history': main.innerHTML = await renderHistory(); break;
-      default: main.innerHTML = await renderDashboard(); bindDashboardEvents();
+      case "dashboard":
+        main.innerHTML = await renderDashboard();
+        bindDashboardEvents();
+        break;
+      case "expenses":
+        main.innerHTML = await renderExpenses();
+        bindExpenseEvents();
+        break;
+      case "new-expense":
+        main.innerHTML = await renderNewExpense();
+        bindNewExpenseEvents();
+        break;
+      case "approvals":
+        main.innerHTML = await renderApprovals();
+        bindApprovalEvents();
+        break;
+      case "users":
+        main.innerHTML = await renderUsers();
+        bindUserEvents();
+        break;
+      case "rules":
+        main.innerHTML = await renderRules();
+        bindRuleEvents();
+        break;
+      case "budgets":
+        main.innerHTML = await renderBudgets();
+        bindBudgetEvents();
+        break;
+      case "history":
+        main.innerHTML = await renderHistory();
+        break;
+      default:
+        main.innerHTML = await renderDashboard();
+        bindDashboardEvents();
     }
   } catch (err) {
     console.error(err);
@@ -153,9 +235,14 @@ function renderLoginForm() {
       </div>
       <button class="btn btn-primary btn-block btn-lg" type="submit" id="loginBtn">Sign In</button>
     </form>
-    <p class="text-center text-sm mt-2 text-muted">
-      Don't have an account? <a href="#" id="showSignup" class="text-primary" style="text-decoration:none;font-weight:600;">Sign up</a>
-    </p>
+    <div class="auth-links">
+      <p class="text-center text-sm mt-2 text-muted">
+        <a href="#" id="showForgotPassword" class="text-primary" style="text-decoration:none;font-weight:500;font-size:0.82rem;">Forgot password?</a>
+      </p>
+      <p class="text-center text-sm mt-1 text-muted">
+        Don't have an account? <a href="#" id="showSignup" class="text-primary" style="text-decoration:none;font-weight:600;">Sign up</a>
+      </p>
+    </div>
   `;
 }
 
@@ -198,75 +285,291 @@ function renderSignupForm() {
   `;
 }
 
+// ─── Forgot Password Flow ───
+let _resetEmail = "";
+
+function renderForgotPasswordForm() {
+  return `
+    <h1 class="auth-title" id="authTitle">Forgot password?</h1>
+    <p class="auth-subtitle">Enter your email and we'll send you a reset code</p>
+    <form id="forgotForm">
+      <div class="form-group">
+        <label class="form-label" for="forgotEmail">Email</label>
+        <input class="form-input" type="email" id="forgotEmail" placeholder="you@company.com" required>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit" id="forgotBtn">Send Reset Code</button>
+    </form>
+    <p class="text-center text-sm mt-2 text-muted">
+      Remember your password? <a href="#" id="showLogin" class="text-primary" style="text-decoration:none;font-weight:600;">Sign in</a>
+    </p>
+  `;
+}
+
+function renderOTPForm(otpHint) {
+  return `
+    <h1 class="auth-title" id="authTitle">Enter reset code</h1>
+    <p class="auth-subtitle">We sent a 6-digit code to <strong>${_resetEmail}</strong></p>
+    <form id="otpForm">
+      <div class="form-group">
+        <label class="form-label" for="otpCode">Reset Code</label>
+        <input class="form-input" type="text" id="otpCode" placeholder="Enter 6-digit code" required maxlength="6" pattern="[0-9]{6}"
+               style="text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:0.5rem" value="${otpHint || ""}">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit" id="verifyOtpBtn">Verify Code</button>
+    </form>
+    <div class="auth-links">
+      <p class="text-center text-sm mt-2 text-muted">
+        Didn't receive it? <a href="#" id="resendOtp" class="text-primary" style="text-decoration:none;font-weight:500;">Resend code</a>
+      </p>
+      <p class="text-center text-sm mt-1 text-muted">
+        <a href="#" id="showLogin" class="text-primary" style="text-decoration:none;font-weight:600;">Back to Sign in</a>
+      </p>
+    </div>
+  `;
+}
+
+function renderResetPasswordForm(otp) {
+  return `
+    <h1 class="auth-title" id="authTitle">Set new password</h1>
+    <p class="auth-subtitle">Create a strong new password for your account</p>
+    <form id="resetForm">
+      <input type="hidden" id="resetOtp" value="${otp}">
+      <div class="form-group">
+        <label class="form-label" for="newPassword">New Password</label>
+        <input class="form-input" type="password" id="newPassword" placeholder="Min 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input class="form-input" type="password" id="confirmPassword" placeholder="Re-enter your password" required minlength="6">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit" id="resetBtn">Reset Password</button>
+    </form>
+    <p class="text-center text-sm mt-2 text-muted">
+      <a href="#" id="showLogin" class="text-primary" style="text-decoration:none;font-weight:600;">Back to Sign in</a>
+    </p>
+  `;
+}
+
 function bindAuthEvents() {
-  const content = document.getElementById('authContent');
+  const content = document.getElementById("authContent");
   if (!content) return;
 
-  document.getElementById('showSignup')?.addEventListener('click', (e) => {
+  document.getElementById("showSignup")?.addEventListener("click", (e) => {
     e.preventDefault();
     content.innerHTML = renderSignupForm();
     bindAuthEvents();
   });
 
-  document.getElementById('showLogin')?.addEventListener('click', (e) => {
+  document.getElementById("showLogin")?.addEventListener("click", (e) => {
     e.preventDefault();
     content.innerHTML = renderLoginForm();
     bindAuthEvents();
   });
 
-  document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+  document
+    .getElementById("showForgotPassword")
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      content.innerHTML = renderForgotPasswordForm();
+      bindAuthEvents();
+    });
+
+  // ─── Login ───
+  document
+    .getElementById("loginForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true;
+      btn.textContent = "Signing in...";
+      try {
+        const data = await api("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: document.getElementById("loginEmail").value,
+            password: document.getElementById("loginPassword").value,
+          }),
+        });
+        if (!data || data.success === false) {
+          showToast(
+            (data && data.error) || "Invalid email or password",
+            "error",
+          );
+          btn.disabled = false;
+          btn.textContent = "Sign In";
+          return;
+        }
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem("rf_token", authToken);
+        showToast(`Welcome back, ${currentUser.full_name}!`, "success");
+        currentPage = "dashboard";
+        render();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    });
+
+  // ─── Signup ───
+  document
+    .getElementById("signupForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("signupBtn");
+      btn.disabled = true;
+      btn.textContent = "Creating account...";
+      try {
+        const data = await api("/api/auth/signup", {
+          method: "POST",
+          body: JSON.stringify({
+            full_name: document.getElementById("signupName").value,
+            email: document.getElementById("signupEmail").value,
+            password: document.getElementById("signupPassword").value,
+            company_name: document.getElementById("signupCompany").value,
+            role: document.getElementById("signupRole").value,
+          }),
+        });
+        if (!data) {
+          showToast("Signup failed", "error");
+          btn.disabled = false;
+          btn.textContent = "Create Account";
+          return;
+        }
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem("rf_token", authToken);
+        showToast(
+          `Welcome, ${currentUser.full_name}! Your company has been set up.`,
+          "success",
+        );
+        currentPage = "dashboard";
+        render();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Create Account";
+      }
+    });
+
+  // ─── Forgot Password: Step 1 — Send OTP ───
+  document
+    .getElementById("forgotForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("forgotBtn");
+      const email = document.getElementById("forgotEmail").value;
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      try {
+        const res = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.error || "Request failed", "error");
+          btn.disabled = false;
+          btn.textContent = "Send Reset Code";
+          return;
+        }
+        _resetEmail = email;
+        showToast(data.message || "Reset code sent!", "success");
+        content.innerHTML = renderOTPForm(data._dev_otp || "");
+        bindAuthEvents();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Send Reset Code";
+      }
+    });
+
+  // ─── Forgot Password: Resend OTP ───
+  document.getElementById("resendOtp")?.addEventListener("click", async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true; btn.textContent = 'Signing in...';
     try {
-      const data = await api('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value })
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: _resetEmail }),
       });
-      authToken = data.token;
-      currentUser = data.user;
-      localStorage.setItem('rf_token', authToken);
-      showToast(`Welcome back, ${currentUser.full_name}!`, 'success');
-      currentPage = 'dashboard';
-      render();
+      const data = await res.json();
+      showToast("New reset code sent!", "success");
+      if (data._dev_otp) {
+        document.getElementById("otpCode").value = data._dev_otp;
+      }
     } catch (err) {
-      showToast(err.message, 'error');
-      btn.disabled = false; btn.textContent = 'Sign In';
+      showToast("Failed to resend code", "error");
     }
   });
 
-  document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
+  // ─── Forgot Password: Step 2 — Verify OTP ───
+  document.getElementById("otpForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const btn = document.getElementById('signupBtn');
-    btn.disabled = true; btn.textContent = 'Creating account...';
-    try {
-      const data = await api('/api/auth/signup', {
-        method: 'POST',
-        body: JSON.stringify({
-          full_name: document.getElementById('signupName').value,
-          email: document.getElementById('signupEmail').value,
-          password: document.getElementById('signupPassword').value,
-          company_name: document.getElementById('signupCompany').value,
-          role: document.getElementById('signupRole').value
-        })
-      });
-      authToken = data.token;
-      currentUser = data.user;
-      localStorage.setItem('rf_token', authToken);
-      showToast(`Welcome, ${currentUser.full_name}! Your company has been set up.`, 'success');
-      currentPage = 'dashboard';
-      render();
-    } catch (err) {
-      showToast(err.message, 'error');
-      btn.disabled = false; btn.textContent = 'Create Account';
+    const otp = document.getElementById("otpCode").value.trim();
+    if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      showToast("Please enter a valid 6-digit code", "error");
+      return;
     }
+    content.innerHTML = renderResetPasswordForm(otp);
+    bindAuthEvents();
   });
+
+  // ─── Forgot Password: Step 3 — Reset Password ───
+  document
+    .getElementById("resetForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("resetBtn");
+      const newPwd = document.getElementById("newPassword").value;
+      const confirmPwd = document.getElementById("confirmPassword").value;
+      const otp = document.getElementById("resetOtp").value;
+
+      if (newPwd !== confirmPwd) {
+        showToast("Passwords do not match", "error");
+        return;
+      }
+      if (newPwd.length < 6) {
+        showToast("Password must be at least 6 characters", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Resetting...";
+      try {
+        const res = await fetch("/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: _resetEmail,
+            otp,
+            new_password: newPwd,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.error || "Reset failed", "error");
+          btn.disabled = false;
+          btn.textContent = "Reset Password";
+          return;
+        }
+        showToast("Password reset successfully! Please sign in.", "success");
+        content.innerHTML = renderLoginForm();
+        bindAuthEvents();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Reset Password";
+      }
+    });
 }
 
 // ═══════ SIDEBAR ═══════
 function renderSidebar() {
-  const isAdmin = currentUser?.role === 'admin';
-  const isManager = currentUser?.role === 'manager' || isAdmin;
+  const isAdmin = currentUser?.role === "admin";
+  const isManager = currentUser?.role === "manager" || isAdmin;
 
   return `
     <aside class="sidebar" id="sidebar">
@@ -277,49 +580,60 @@ function renderSidebar() {
       <div class="sidebar-section">
         <div class="sidebar-section-title">Main</div>
         <nav class="sidebar-nav">
-          <button class="sidebar-link ${currentPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">
+          <button class="sidebar-link ${currentPage === "dashboard" ? "active" : ""}" data-page="dashboard">
             <span class="sidebar-link-icon">📊</span> Dashboard
           </button>
-          <button class="sidebar-link ${currentPage === 'expenses' ? 'active' : ''}" data-page="expenses">
+          <button class="sidebar-link ${currentPage === "expenses" ? "active" : ""}" data-page="expenses">
             <span class="sidebar-link-icon">💰</span> My Expenses
           </button>
-          <button class="sidebar-link ${currentPage === 'new-expense' ? 'active' : ''}" data-page="new-expense">
+          <button class="sidebar-link ${currentPage === "new-expense" ? "active" : ""}" data-page="new-expense">
             <span class="sidebar-link-icon">➕</span> New Expense
           </button>
-          ${isManager ? `
-            <button class="sidebar-link ${currentPage === 'approvals' ? 'active' : ''}" data-page="approvals">
+          ${
+            isManager
+              ? `
+            <button class="sidebar-link ${currentPage === "approvals" ? "active" : ""}" data-page="approvals">
               <span class="sidebar-link-icon">✅</span> Approvals
               <span class="sidebar-link-badge" id="approvalBadge" style="display:none">0</span>
             </button>
-          ` : ''}
+          `
+              : ""
+          }
         </nav>
       </div>
-      ${isAdmin ? `
+      ${
+        isAdmin
+          ? `
         <div class="sidebar-section">
           <div class="sidebar-section-title">Admin</div>
           <nav class="sidebar-nav">
-            <button class="sidebar-link ${currentPage === 'users' ? 'active' : ''}" data-page="users">
+            <button class="sidebar-link ${currentPage === "users" ? "active" : ""}" data-page="users">
               <span class="sidebar-link-icon">👥</span> Users
             </button>
-            <button class="sidebar-link ${currentPage === 'rules' ? 'active' : ''}" data-page="rules">
+            <button class="sidebar-link ${currentPage === "rules" ? "active" : ""}" data-page="rules">
               <span class="sidebar-link-icon">⚙️</span> Approval Rules
+            </button>
+            <button class="sidebar-link ${currentPage === "budgets" ? "active" : ""}" data-page="budgets">
+              <span class="sidebar-link-icon">💼</span> Budgets
             </button>
           </nav>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       <div class="sidebar-section">
         <div class="sidebar-section-title">Account</div>
         <nav class="sidebar-nav">
-          <button class="sidebar-link ${currentPage === 'history' ? 'active' : ''}" data-page="history">
+          <button class="sidebar-link ${currentPage === "history" ? "active" : ""}" data-page="history">
             <span class="sidebar-link-icon">📜</span> History
           </button>
         </nav>
       </div>
       <div class="sidebar-user">
-        <div class="sidebar-avatar" style="background:${currentUser?.avatar_color || '#6366F1'}">${getInitials(currentUser?.full_name)}</div>
+        <div class="sidebar-avatar" style="background:${currentUser?.avatar_color || "#6366F1"}">${getInitials(currentUser?.full_name)}</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name">${currentUser?.full_name || 'User'}</div>
-          <div class="sidebar-user-role">${currentUser?.role || 'employee'} · ${currentUser?.company_name || ''}</div>
+          <div class="sidebar-user-name">${currentUser?.full_name || "User"}</div>
+          <div class="sidebar-user-role">${currentUser?.role || "employee"} · ${currentUser?.company_name || ""}</div>
         </div>
         <button class="sidebar-logout" id="logoutBtn" title="Sign out">⏻</button>
       </div>
@@ -328,26 +642,33 @@ function renderSidebar() {
 }
 
 function bindSidebarEvents() {
-  document.querySelectorAll('.sidebar-link[data-page]').forEach(link => {
-    link.addEventListener('click', () => navigate(link.dataset.page));
+  document.querySelectorAll(".sidebar-link[data-page]").forEach((link) => {
+    link.addEventListener("click", () => navigate(link.dataset.page));
   });
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
   loadApprovalBadge();
 }
 
 async function loadApprovalBadge() {
-  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'manager')) return;
+  if (
+    !currentUser ||
+    (currentUser.role !== "admin" && currentUser.role !== "manager")
+  )
+    return;
   try {
-    const pending = await api('/api/approvals/pending');
-    const badge = document.getElementById('approvalBadge');
-    if (badge && pending.length > 0) { badge.textContent = pending.length; badge.style.display = 'inline'; }
+    const pending = await api("/api/approvals/pending");
+    const badge = document.getElementById("approvalBadge");
+    if (badge && pending.length > 0) {
+      badge.textContent = pending.length;
+      badge.style.display = "inline";
+    }
   } catch {}
 }
 
 // ═══════ DASHBOARD ═══════
 async function renderDashboard() {
-  const stats = await api('/api/dashboard/stats');
-  const isEmployee = currentUser?.role === 'employee';
+  const stats = await api("/api/dashboard/stats");
+  const isEmployee = currentUser?.role === "employee";
 
   let statsCards;
   if (isEmployee) {
@@ -382,42 +703,71 @@ async function renderDashboard() {
     `;
   }
 
-  let categoriesChart = '';
+  let categoriesChart = "";
   if (stats.categories && stats.categories.length > 0) {
-    const maxTotal = Math.max(...stats.categories.map(c => c.total));
-    const barColors = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#F97316'];
+    const barColors = [
+      "#6366F1",
+      "#10B981",
+      "#F59E0B",
+      "#EC4899",
+      "#06B6D4",
+      "#F97316",
+    ];
     categoriesChart = `
       <div class="card">
-        <div class="card-header"><div class="card-title">Expenses by Category</div></div>
-        ${stats.categories.map((c, i) => `
+        <div class="card-header">
+          <div class="card-title">Budget Utilization by Category</div>
+          ${stats.budget_summary ? `<div class="text-sm text-muted">${stats.budget_summary.overall_utilization}% overall</div>` : ""}
+        </div>
+        ${stats.categories
+          .map((c, i) => {
+            const hasBudget = c.monthly_limit !== null;
+            const utilPct = hasBudget ? Math.min(c.utilization || 0, 100) : 0;
+            const barColor = !hasBudget
+              ? barColors[i % barColors.length]
+              : utilPct >= 90
+                ? "#F43F5E"
+                : utilPct >= 70
+                  ? "#F59E0B"
+                  : "#10B981";
+            const budgetLabel = hasBudget
+              ? `${formatCurrency(c.month_spent)} / ${formatCurrency(c.monthly_limit)} (${c.utilization}%)`
+              : `${formatCurrency(c.total)} (${c.count}) — No limit set`;
+            return `
           <div class="chart-bar-container">
             <div class="chart-bar-label">
-              <span>${categoryIcons[c.category] || '📋'} ${c.category}</span>
-              <span class="font-bold">${formatCurrency(c.total)} (${c.count})</span>
+              <span>${categoryIcons[c.category] || "📋"} ${c.category}</span>
+              <span class="font-bold" style="color:${hasBudget && utilPct >= 90 ? "var(--danger)" : hasBudget && utilPct >= 70 ? "var(--warning)" : ""}">${budgetLabel}</span>
             </div>
             <div class="chart-bar-track">
-              <div class="chart-bar-fill" style="width:${(c.total / maxTotal * 100)}%;background:${barColors[i % barColors.length]}"></div>
+              <div class="chart-bar-fill" style="width:${hasBudget ? utilPct : 50}%;background:${barColor}"></div>
             </div>
-          </div>
-        `).join('')}
+            ${hasBudget ? `<div class="text-xs text-muted" style="margin-top:2px">${formatCurrency(c.remaining)} remaining</div>` : ""}
+          </div>`;
+          })
+          .join("")}
       </div>
     `;
   }
 
-  const recentRows = (stats.recent || []).map(e => `
+  const recentRows = (stats.recent || [])
+    .map(
+      (e) => `
     <tr data-expense-id="${e.id}" class="expense-row">
       <td>
         <div class="flex-center gap-1">
-          <div class="avatar avatar-sm" style="background:${e.submitter_color || '#6366F1'}">${getInitials(e.submitter_name || currentUser.full_name)}</div>
+          <div class="avatar avatar-sm" style="background:${e.submitter_color || "#6366F1"}">${getInitials(e.submitter_name || currentUser.full_name)}</div>
           <span>${e.submitter_name || currentUser.full_name}</span>
         </div>
       </td>
       <td class="font-bold">${formatCurrency(e.total_amount, e.currency)}</td>
-      <td>${categoryIcons[e.category] || '📋'} ${e.category}</td>
+      <td>${categoryIcons[e.category] || "📋"} ${e.category}</td>
       <td><span class="badge badge--${e.status}"><span class="badge--dot"></span> ${getStatusLabel(e.status)}</span></td>
       <td class="text-muted">${formatDate(e.created_at)}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <div class="page-header">
@@ -431,12 +781,16 @@ async function renderDashboard() {
     <div class="chart-grid">
       <div class="table-container">
         <div class="table-header"><span class="table-title">Recent Expenses</span></div>
-        ${recentRows ? `
+        ${
+          recentRows
+            ? `
           <table>
             <thead><tr><th>Employee</th><th>Amount</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
             <tbody>${recentRows}</tbody>
           </table>
-        ` : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expenses yet</div></div>'}
+        `
+            : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expenses yet</div></div>'
+        }
       </div>
       ${categoriesChart}
     </div>
@@ -444,8 +798,10 @@ async function renderDashboard() {
 }
 
 function bindDashboardEvents() {
-  document.querySelectorAll('.expense-row').forEach(row => {
-    row.addEventListener('click', () => showExpenseDetail(row.dataset.expenseId));
+  document.querySelectorAll(".expense-row").forEach((row) => {
+    row.addEventListener("click", () =>
+      showExpenseDetail(row.dataset.expenseId),
+    );
   });
 }
 
@@ -454,27 +810,38 @@ async function showExpenseDetail(expenseId) {
   const expense = await api(`/api/expenses/${expenseId}`);
   if (!expense) return;
 
-  const timeline = (expense.approval_steps || []).map(s => {
-    const icons = { pending: '⏳', approved: '✅', rejected: '❌', skipped: '⏭️' };
-    return `
+  const timeline = (expense.approval_steps || [])
+    .map((s) => {
+      const icons = {
+        pending: "⏳",
+        approved: "✅",
+        rejected: "❌",
+        skipped: "⏭️",
+      };
+      return `
       <div class="timeline-step">
         <div class="timeline-dot timeline-dot--${s.status}">${icons[s.status]}</div>
         <div class="timeline-content">
           <div class="timeline-title">${s.approver_name} <span class="badge badge--${s.status}" style="margin-left:0.5rem"><span class="badge--dot"></span> ${getStatusLabel(s.status)}</span></div>
-          <div class="timeline-meta">Step ${s.step_order} ${s.decided_at ? '· ' + formatDate(s.decided_at) : ''}</div>
-          ${s.comment ? `<div class="timeline-comment">"${s.comment}"</div>` : ''}
+          <div class="timeline-meta">Step ${s.step_order} ${s.decided_at ? "· " + formatDate(s.decided_at) : ""}</div>
+          ${s.comment ? `<div class="timeline-comment">"${s.comment}"</div>` : ""}
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 
-  const lineItems = (expense.line_items || []).map(l => `
-    <tr><td>${l.description}</td><td>${l.category || '—'}</td><td class="font-bold">${formatCurrency(l.amount)}</td><td class="text-muted">${l.date || '—'}</td></tr>
-  `).join('');
+  const lineItems = (expense.line_items || [])
+    .map(
+      (l) => `
+    <tr><td>${l.description}</td><td>${l.category || "—"}</td><td class="font-bold">${formatCurrency(l.amount)}</td><td class="text-muted">${l.date || "—"}</td></tr>
+  `,
+    )
+    .join("");
 
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'expenseModal';
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.id = "expenseModal";
   modal.innerHTML = `
     <div class="modal" style="max-width:700px">
       <div class="modal-header">
@@ -495,42 +862,61 @@ async function showExpenseDetail(expenseId) {
           </span>
         </div>
         <div class="form-row mb-2">
-          <div><span class="text-xs text-muted">CATEGORY</span><div>${categoryIcons[expense.category] || ''} ${expense.category}</div></div>
+          <div><span class="text-xs text-muted">CATEGORY</span><div>${categoryIcons[expense.category] || ""} ${expense.category}</div></div>
           <div><span class="text-xs text-muted">CURRENCY</span><div>${expense.currency}</div></div>
         </div>
-        ${expense.description ? `<div class="mb-2"><span class="text-xs text-muted">DESCRIPTION</span><div class="text-sm">${expense.description}</div></div>` : ''}
-        ${lineItems ? `
+        ${expense.description ? `<div class="mb-2"><span class="text-xs text-muted">DESCRIPTION</span><div class="text-sm">${expense.description}</div></div>` : ""}
+        ${
+          lineItems
+            ? `
           <div class="mb-2">
             <span class="text-xs text-muted">LINE ITEMS</span>
             <table class="mt-1"><thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody>${lineItems}</tbody></table>
           </div>
-        ` : ''}
-        ${timeline ? `<div><span class="text-xs text-muted">APPROVAL TIMELINE</span><div class="timeline mt-1">${timeline}</div></div>` : ''}
+        `
+            : ""
+        }
+        ${timeline ? `<div><span class="text-xs text-muted">APPROVAL TIMELINE</span><div class="timeline mt-1">${timeline}</div></div>` : ""}
       </div>
     </div>
   `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
   document.body.appendChild(modal);
 }
 
 // ═══════ MY EXPENSES ═══════
 async function renderExpenses() {
-  const expenses = await api('/api/expenses');
-  const rows = expenses.map(e => `
+  const expenses = await api("/api/expenses");
+  const rows = expenses
+    .map(
+      (e) => `
     <tr class="expense-row" data-expense-id="${e.id}">
       <td class="text-muted text-xs">${e.id.slice(0, 8)}</td>
       <td class="font-bold">${e.title}</td>
       <td class="font-bold">${formatCurrency(e.total_amount, e.currency)}</td>
-      <td>${categoryIcons[e.category] || '📋'} ${e.category}</td>
+      <td>${categoryIcons[e.category] || "📋"} ${e.category}</td>
       <td><span class="badge badge--${e.status}"><span class="badge--dot"></span> ${getStatusLabel(e.status)}</span></td>
       <td class="text-muted">${formatDate(e.created_at)}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  const totalSubmitted = expenses.reduce((s, e) => s + (e.total_amount || 0), 0);
-  const pendingAmt = expenses.filter(e => ['pending', 'in_review'].includes(e.status)).reduce((s, e) => s + (e.total_amount || 0), 0);
-  const approvedAmt = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + (e.total_amount || 0), 0);
-  const rejectedAmt = expenses.filter(e => e.status === 'rejected').reduce((s, e) => s + (e.total_amount || 0), 0);
+  const totalSubmitted = expenses.reduce(
+    (s, e) => s + (e.total_amount || 0),
+    0,
+  );
+  const pendingAmt = expenses
+    .filter((e) => ["pending", "in_review"].includes(e.status))
+    .reduce((s, e) => s + (e.total_amount || 0), 0);
+  const approvedAmt = expenses
+    .filter((e) => e.status === "approved")
+    .reduce((s, e) => s + (e.total_amount || 0), 0);
+  const rejectedAmt = expenses
+    .filter((e) => e.status === "rejected")
+    .reduce((s, e) => s + (e.total_amount || 0), 0);
 
   return `
     <div class="page-header">
@@ -545,30 +931,36 @@ async function renderExpenses() {
     </div>
     <div class="table-container">
       <div class="table-header"><span class="table-title">All Expenses (${expenses.length})</span></div>
-      ${expenses.length > 0 ? `
+      ${
+        expenses.length > 0
+          ? `
         <table>
           <thead><tr><th>ID</th><th>Title</th><th>Amount</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-      ` : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expenses yet</div><div class="empty-state-hint">Submit your first expense to get started</div></div>'}
+      `
+          : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expenses yet</div><div class="empty-state-hint">Submit your first expense to get started</div></div>'
+      }
     </div>
   `;
 }
 
 function bindExpenseEvents() {
-  document.querySelectorAll('.expense-row').forEach(row => {
-    row.addEventListener('click', () => showExpenseDetail(row.dataset.expenseId));
+  document.querySelectorAll(".expense-row").forEach((row) => {
+    row.addEventListener("click", () =>
+      showExpenseDetail(row.dataset.expenseId),
+    );
   });
 }
 
 // ═══════ NEW EXPENSE ═══════
-let lineItems = [{ description: '', amount: '', category: '', date: '' }];
+let lineItems = [{ description: "", amount: "", category: "", date: "" }];
 let receiptFile = null;
 let ocrData = null;
 
 async function renderNewExpense() {
-  const currencies = await api('/api/currency');
-  lineItems = [{ description: '', amount: '', category: '', date: '' }];
+  const currencies = await api("/api/currency");
+  lineItems = [{ description: "", amount: "", category: "", date: "" }];
   receiptFile = null;
   ocrData = null;
 
@@ -595,11 +987,12 @@ async function renderNewExpense() {
             </select>
           </div>
         </div>
+        <div id="budgetIndicator"></div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="expCurrency">Currency</label>
             <select class="form-select" id="expCurrency">
-              ${currencies.map(c => `<option value="${c.code}" ${c.code === 'INR' ? 'selected' : ''}>${c.symbol} ${c.code} — ${c.name}</option>`).join('')}
+              ${currencies.map((c) => `<option value="${c.code}" ${c.code === "INR" ? "selected" : ""}>${c.symbol} ${c.code} — ${c.name}</option>`).join("")}
             </select>
           </div>
           <div class="form-group">
@@ -642,27 +1035,31 @@ async function renderNewExpense() {
 }
 
 function renderLineItems() {
-  const container = document.getElementById('lineItemsContainer');
+  const container = document.getElementById("lineItemsContainer");
   if (!container) return;
-  container.innerHTML = lineItems.map((item, i) => `
+  container.innerHTML = lineItems
+    .map(
+      (item, i) => `
     <div class="line-item">
       <input type="text" placeholder="Description" value="${item.description}" data-index="${i}" data-field="description">
       <input type="number" placeholder="Amount" step="0.01" value="${item.amount}" data-index="${i}" data-field="amount">
       <input type="date" value="${item.date}" data-index="${i}" data-field="date">
-      ${lineItems.length > 1 ? `<button type="button" class="line-item-remove" data-remove="${i}">✕</button>` : '<div></div>'}
+      ${lineItems.length > 1 ? `<button type="button" class="line-item-remove" data-remove="${i}">✕</button>` : "<div></div>"}
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  container.querySelectorAll('input').forEach(input => {
-    input.addEventListener('input', () => {
+  container.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", () => {
       const idx = parseInt(input.dataset.index);
       lineItems[idx][input.dataset.field] = input.value;
       updateTotal();
     });
   });
 
-  container.querySelectorAll('.line-item-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
+  container.querySelectorAll(".line-item-remove").forEach((btn) => {
+    btn.addEventListener("click", () => {
       lineItems.splice(parseInt(btn.dataset.remove), 1);
       renderLineItems();
     });
@@ -672,85 +1069,154 @@ function renderLineItems() {
 }
 
 function updateTotal() {
-  const total = lineItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-  const currencyEl = document.getElementById('expCurrency');
-  const currency = currencyEl ? currencyEl.value : 'USD';
-  document.getElementById('expTotal').value = formatCurrency(total, currency);
+  const total = lineItems.reduce(
+    (sum, item) => sum + (parseFloat(item.amount) || 0),
+    0,
+  );
+  const currencyEl = document.getElementById("expCurrency");
+  const currency = currencyEl ? currencyEl.value : "USD";
+  document.getElementById("expTotal").value = formatCurrency(total, currency);
 }
 
 function bindNewExpenseEvents() {
   renderLineItems();
 
-  document.getElementById('addLineItem')?.addEventListener('click', () => {
-    lineItems.push({ description: '', amount: '', category: '', date: '' });
+  document.getElementById("addLineItem")?.addEventListener("click", () => {
+    lineItems.push({ description: "", amount: "", category: "", date: "" });
     renderLineItems();
   });
 
   // Upload logic
-  const uploadArea = document.getElementById('uploadArea');
-  const receiptInput = document.getElementById('receiptInput');
+  const uploadArea = document.getElementById("uploadArea");
+  const receiptInput = document.getElementById("receiptInput");
 
-  uploadArea?.addEventListener('click', () => receiptInput.click());
-  uploadArea?.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragging'); });
-  uploadArea?.addEventListener('dragleave', () => uploadArea.classList.remove('dragging'));
-  uploadArea?.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('dragging'); handleFile(e.dataTransfer.files[0]); });
-  receiptInput?.addEventListener('change', () => { if (receiptInput.files[0]) handleFile(receiptInput.files[0]); });
-
-  document.getElementById('expCurrency')?.addEventListener('change', updateTotal);
-
-  document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
+  uploadArea?.addEventListener("click", () => receiptInput.click());
+  uploadArea?.addEventListener("dragover", (e) => {
     e.preventDefault();
-    const btn = document.getElementById('submitExpenseBtn');
-    if (lineItems.every(i => !i.description && !i.amount)) {
-      showToast('Add at least one line item', 'error'); return;
-    }
-    btn.disabled = true; btn.textContent = 'Submitting...';
-    try {
-      await api('/api/expenses', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: document.getElementById('expTitle').value,
-          description: document.getElementById('expDesc').value,
-          category: document.getElementById('expCategory').value,
-          currency: document.getElementById('expCurrency').value,
-          line_items: lineItems.filter(i => i.description || i.amount),
-          receipt_path: receiptFile,
-          receipt_ocr_data: ocrData ? JSON.stringify(ocrData) : null
-        })
-      });
-      showToast('Expense submitted successfully!', 'success');
-      navigate('expenses');
-    } catch (err) {
-      showToast(err.message, 'error');
-      btn.disabled = false; btn.textContent = 'Submit Expense';
-    }
+    uploadArea.classList.add("dragging");
   });
+  uploadArea?.addEventListener("dragleave", () =>
+    uploadArea.classList.remove("dragging"),
+  );
+  uploadArea?.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove("dragging");
+    handleFile(e.dataTransfer.files[0]);
+  });
+  receiptInput?.addEventListener("change", () => {
+    if (receiptInput.files[0]) handleFile(receiptInput.files[0]);
+  });
+
+  document
+    .getElementById("expCurrency")
+    ?.addEventListener("change", updateTotal);
+
+  // Budget check on category change
+  async function checkCategoryBudget() {
+    const category = document.getElementById("expCategory")?.value;
+    const indicator = document.getElementById("budgetIndicator");
+    if (!category || !indicator) return;
+    try {
+      const data = await api(
+        `/api/budgets/check/${encodeURIComponent(category)}`,
+      );
+      if (!data || data.unlimited) {
+        indicator.innerHTML = "";
+        return;
+      }
+      const pct = Math.min(data.utilization, 100);
+      const color =
+        pct >= 90
+          ? "var(--danger)"
+          : pct >= 70
+            ? "var(--warning)"
+            : "var(--success)";
+      const remaining = Math.max(0, data.remaining);
+      indicator.innerHTML = `
+        <div class="budget-hint" style="padding:0.75rem 1rem;background:rgba(15,25,48,0.5);border:1px solid rgba(64,72,93,0.15);border-radius:var(--radius-md);margin-bottom:1.25rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem">
+            <span class="text-xs" style="font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:${color}">
+              💼 ${category} Budget — ${pct}% used
+            </span>
+            <span class="text-xs text-muted">${formatCurrency(data.spent)} / ${formatCurrency(data.monthly_limit)}</span>
+          </div>
+          <div class="chart-bar-track" style="height:6px">
+            <div class="chart-bar-fill" style="width:${pct}%;background:${color};transition:width 0.4s ease"></div>
+          </div>
+          <div class="text-xs" style="margin-top:0.3rem;color:${color};font-weight:600">
+            ${remaining > 0 ? `${formatCurrency(remaining)} remaining this month` : "⚠️ Budget fully utilized!"}
+          </div>
+        </div>
+      `;
+    } catch {
+      indicator.innerHTML = "";
+    }
+  }
+
+  document
+    .getElementById("expCategory")
+    ?.addEventListener("change", checkCategoryBudget);
+  checkCategoryBudget(); // Load initial
+
+  document
+    .getElementById("expenseForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("submitExpenseBtn");
+      if (lineItems.every((i) => !i.description && !i.amount)) {
+        showToast("Add at least one line item", "error");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Submitting...";
+      try {
+        await api("/api/expenses", {
+          method: "POST",
+          body: JSON.stringify({
+            title: document.getElementById("expTitle").value,
+            description: document.getElementById("expDesc").value,
+            category: document.getElementById("expCategory").value,
+            currency: document.getElementById("expCurrency").value,
+            line_items: lineItems.filter((i) => i.description || i.amount),
+            receipt_path: receiptFile,
+            receipt_ocr_data: ocrData ? JSON.stringify(ocrData) : null,
+          }),
+        });
+        showToast("Expense submitted successfully!", "success");
+        navigate("expenses");
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Submit Expense";
+      }
+    });
 }
 
 async function handleFile(file) {
   if (!file) return;
   const formData = new FormData();
-  formData.append('receipt', file);
+  formData.append("receipt", file);
 
-  document.getElementById('uploadPreview').innerHTML = `
+  document.getElementById("uploadPreview").innerHTML = `
     <div class="upload-preview">
       <span class="upload-preview-icon">📎</span>
       <span class="upload-preview-name">${file.name}</span>
       <button class="upload-preview-remove" id="removeReceipt">✕</button>
     </div>
   `;
-  document.getElementById('removeReceipt')?.addEventListener('click', () => {
-    receiptFile = null; ocrData = null;
-    document.getElementById('uploadPreview').innerHTML = '';
-    document.getElementById('ocrResult').innerHTML = '';
+  document.getElementById("removeReceipt")?.addEventListener("click", () => {
+    receiptFile = null;
+    ocrData = null;
+    document.getElementById("uploadPreview").innerHTML = "";
+    document.getElementById("ocrResult").innerHTML = "";
   });
 
   try {
-    const result = await apiUpload('/api/ocr/upload', formData);
+    const result = await apiUpload("/api/ocr/upload", formData);
     receiptFile = result.file_path;
     ocrData = result.ocr_data;
 
-    document.getElementById('ocrResult').innerHTML = `
+    document.getElementById("ocrResult").innerHTML = `
       <div class="ocr-result">
         <div class="ocr-result-header">🤖 OCR Auto-detected (${Math.round(result.ocr_data.confidence * 100)}% confidence)</div>
         <div class="ocr-result-grid">
@@ -763,28 +1229,44 @@ async function handleFile(file) {
       </div>
     `;
 
-    document.getElementById('applyOCR')?.addEventListener('click', () => {
-      document.getElementById('expTitle').value = `${result.ocr_data.vendor} — ${result.ocr_data.description}`;
-      document.getElementById('expCategory').value = result.ocr_data.category === 'Accommodation' ? 'Accommodation' :
-        ['Travel', 'Meals', 'Supplies', 'Equipment'].includes(result.ocr_data.category) ? result.ocr_data.category : 'Other';
-      lineItems = [{ description: result.ocr_data.description, amount: result.ocr_data.amount.toString(), category: result.ocr_data.category, date: result.ocr_data.date }];
+    document.getElementById("applyOCR")?.addEventListener("click", () => {
+      document.getElementById("expTitle").value =
+        `${result.ocr_data.vendor} — ${result.ocr_data.description}`;
+      document.getElementById("expCategory").value =
+        result.ocr_data.category === "Accommodation"
+          ? "Accommodation"
+          : ["Travel", "Meals", "Supplies", "Equipment"].includes(
+                result.ocr_data.category,
+              )
+            ? result.ocr_data.category
+            : "Other";
+      lineItems = [
+        {
+          description: result.ocr_data.description,
+          amount: result.ocr_data.amount.toString(),
+          category: result.ocr_data.category,
+          date: result.ocr_data.date,
+        },
+      ];
       renderLineItems();
-      showToast('OCR data applied!', 'success');
+      showToast("OCR data applied!", "success");
     });
   } catch (err) {
-    showToast('OCR processing failed', 'error');
+    showToast("OCR processing failed", "error");
   }
 }
 
 // ═══════ APPROVALS ═══════
 async function renderApprovals() {
-  const pending = await api('/api/approvals/pending');
+  const pending = await api("/api/approvals/pending");
 
-  const cards = pending.map(s => `
+  const cards = pending
+    .map(
+      (s) => `
     <div class="card mb-2" style="cursor:pointer" data-approval-id="${s.id}" data-expense-id="${s.expense_id}">
       <div class="flex-between">
         <div class="flex-center gap-1">
-          <div class="avatar avatar-md" style="background:${s.submitter_color || '#6366F1'}">${getInitials(s.submitter_name)}</div>
+          <div class="avatar avatar-md" style="background:${s.submitter_color || "#6366F1"}">${getInitials(s.submitter_name)}</div>
           <div>
             <div class="font-bold">${s.title}</div>
             <div class="text-sm text-muted">${s.submitter_name} · ${formatDate(s.submitted_at)}</div>
@@ -792,7 +1274,7 @@ async function renderApprovals() {
         </div>
         <div class="text-right">
           <div style="font-size:1.25rem;font-weight:800">${formatCurrency(s.total_amount, s.currency)}</div>
-          <div class="text-sm">${categoryIcons[s.category] || ''} ${s.category}</div>
+          <div class="text-sm">${categoryIcons[s.category] || ""} ${s.category}</div>
         </div>
       </div>
       <div style="display:flex;gap:0.75rem;margin-top:1rem;justify-content:flex-end">
@@ -800,37 +1282,47 @@ async function renderApprovals() {
         <button class="btn btn-success btn-sm approve-btn" data-step="${s.id}">✅ Approve</button>
       </div>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <div class="page-header">
-      <div><h1 class="page-title">Pending Approvals</h1><p class="page-subtitle">${pending.length} expense${pending.length !== 1 ? 's' : ''} awaiting your review</p></div>
+      <div><h1 class="page-title">Pending Approvals</h1><p class="page-subtitle">${pending.length} expense${pending.length !== 1 ? "s" : ""} awaiting your review</p></div>
     </div>
     ${pending.length > 0 ? cards : '<div class="empty-state"><div class="empty-state-icon">🎉</div><div class="empty-state-text">All caught up!</div><div class="empty-state-hint">No pending approvals at the moment</div></div>'}
   `;
 }
 
 function bindApprovalEvents() {
-  document.querySelectorAll('.approve-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); showDecisionModal(btn.dataset.step, 'approved'); });
+  document.querySelectorAll(".approve-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showDecisionModal(btn.dataset.step, "approved");
+    });
   });
-  document.querySelectorAll('.reject-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); showDecisionModal(btn.dataset.step, 'rejected'); });
+  document.querySelectorAll(".reject-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showDecisionModal(btn.dataset.step, "rejected");
+    });
   });
-  document.querySelectorAll('[data-expense-id]').forEach(card => {
-    card.addEventListener('click', () => showExpenseDetail(card.dataset.expenseId));
+  document.querySelectorAll("[data-expense-id]").forEach((card) => {
+    card.addEventListener("click", () =>
+      showExpenseDetail(card.dataset.expenseId),
+    );
   });
 }
 
 function showDecisionModal(stepId, decision) {
-  const isApprove = decision === 'approved';
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'decisionModal';
+  const isApprove = decision === "approved";
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.id = "decisionModal";
   modal.innerHTML = `
     <div class="modal" style="max-width:450px">
       <div class="modal-header">
-        <div class="modal-title">${isApprove ? '✅ Approve' : '❌ Reject'} Expense</div>
+        <div class="modal-title">${isApprove ? "✅ Approve" : "❌ Reject"} Expense</div>
         <button class="modal-close" onclick="document.getElementById('decisionModal').remove()">&times;</button>
       </div>
       <div class="modal-body">
@@ -841,62 +1333,84 @@ function showDecisionModal(stepId, decision) {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="document.getElementById('decisionModal').remove()">Cancel</button>
-        <button class="btn ${isApprove ? 'btn-success' : 'btn-danger'}" id="confirmDecision">${isApprove ? 'Approve' : 'Reject'}</button>
+        <button class="btn ${isApprove ? "btn-success" : "btn-danger"}" id="confirmDecision">${isApprove ? "Approve" : "Reject"}</button>
       </div>
     </div>
   `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
   document.body.appendChild(modal);
 
-  document.getElementById('confirmDecision')?.addEventListener('click', async () => {
-    const btn = document.getElementById('confirmDecision');
-    btn.disabled = true; btn.textContent = 'Processing...';
-    try {
-      await api(`/api/approvals/${stepId}/decide`, {
-        method: 'POST',
-        body: JSON.stringify({ decision, comment: document.getElementById('decisionComment').value })
-      });
-      modal.remove();
-      showToast(`Expense ${isApprove ? 'approved' : 'rejected'} successfully!`, 'success');
-      navigate('approvals');
-    } catch (err) {
-      showToast(err.message, 'error');
-      btn.disabled = false; btn.textContent = isApprove ? 'Approve' : 'Reject';
-    }
-  });
+  document
+    .getElementById("confirmDecision")
+    ?.addEventListener("click", async () => {
+      const btn = document.getElementById("confirmDecision");
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+      try {
+        await api(`/api/approvals/${stepId}/decide`, {
+          method: "POST",
+          body: JSON.stringify({
+            decision,
+            comment: document.getElementById("decisionComment").value,
+          }),
+        });
+        modal.remove();
+        showToast(
+          `Expense ${isApprove ? "approved" : "rejected"} successfully!`,
+          "success",
+        );
+        navigate("approvals");
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = isApprove ? "Approve" : "Reject";
+      }
+    });
 }
 
 // ═══════ USERS ═══════
 async function renderUsers() {
-  const users = await api('/api/users');
-  const managers = await api('/api/users/managers');
+  const users = await api("/api/users");
+  const managers = await api("/api/users/managers");
 
-  const cards = users.map(u => `
+  const cards = users
+    .map(
+      (u) => `
     <div class="user-card">
-      <div class="avatar avatar-lg" style="background:${u.avatar_color || '#6366F1'}">${getInitials(u.full_name)}</div>
+      <div class="avatar avatar-lg" style="background:${u.avatar_color || "#6366F1"}">${getInitials(u.full_name)}</div>
       <div class="user-card-info">
         <div class="user-card-name">${u.full_name}</div>
         <div class="user-card-email">${u.email}</div>
         <div class="flex-center gap-1 mt-1">
-          <span class="badge badge--${u.role === 'admin' ? 'paid' : u.role === 'manager' ? 'in_review' : 'pending'}">
+          <span class="badge badge--${u.role === "admin" ? "paid" : u.role === "manager" ? "in_review" : "pending"}">
             ${u.role}
           </span>
-          ${u.manager_name ? `<span class="text-xs text-muted">→ ${u.manager_name}</span>` : ''}
+          ${u.manager_name ? `<span class="text-xs text-muted">→ ${u.manager_name}</span>` : ""}
         </div>
       </div>
       <div class="user-card-actions">
         <select class="filter-select" data-user-id="${u.id}" data-action="role" style="font-size:0.75rem;padding:0.3rem 1.5rem 0.3rem 0.5rem">
-          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-          <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Manager</option>
-          <option value="employee" ${u.role === 'employee' ? 'selected' : ''}>Employee</option>
+          <option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>
+          <option value="manager" ${u.role === "manager" ? "selected" : ""}>Manager</option>
+          <option value="employee" ${u.role === "employee" ? "selected" : ""}>Employee</option>
         </select>
         <select class="filter-select" data-user-id="${u.id}" data-action="manager" style="font-size:0.75rem;padding:0.3rem 1.5rem 0.3rem 0.5rem">
           <option value="">No Manager</option>
-          ${managers.filter(m => m.id !== u.id).map(m => `<option value="${m.id}" ${u.manager_id === m.id ? 'selected' : ''}>${m.full_name}</option>`).join('')}
+          ${managers
+            .filter((m) => m.id !== u.id)
+            .map(
+              (m) =>
+                `<option value="${m.id}" ${u.manager_id === m.id ? "selected" : ""}>${m.full_name}</option>`,
+            )
+            .join("")}
         </select>
       </div>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <div class="page-header">
@@ -907,49 +1421,67 @@ async function renderUsers() {
 }
 
 function bindUserEvents() {
-  document.querySelectorAll('[data-action="role"]').forEach(select => {
-    select.addEventListener('change', async () => {
+  document.querySelectorAll('[data-action="role"]').forEach((select) => {
+    select.addEventListener("change", async () => {
       try {
-        await api(`/api/users/${select.dataset.userId}/role`, { method: 'PUT', body: JSON.stringify({ role: select.value }) });
-        showToast('Role updated', 'success');
-      } catch (err) { showToast(err.message, 'error'); }
+        await api(`/api/users/${select.dataset.userId}/role`, {
+          method: "PUT",
+          body: JSON.stringify({ role: select.value }),
+        });
+        showToast("Role updated", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
     });
   });
 
-  document.querySelectorAll('[data-action="manager"]').forEach(select => {
-    select.addEventListener('change', async () => {
+  document.querySelectorAll('[data-action="manager"]').forEach((select) => {
+    select.addEventListener("change", async () => {
       try {
-        await api(`/api/users/${select.dataset.userId}/manager`, { method: 'PUT', body: JSON.stringify({ manager_id: select.value || null }) });
-        showToast('Manager assigned', 'success');
-      } catch (err) { showToast(err.message, 'error'); }
+        await api(`/api/users/${select.dataset.userId}/manager`, {
+          method: "PUT",
+          body: JSON.stringify({ manager_id: select.value || null }),
+        });
+        showToast("Manager assigned", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
     });
   });
 }
 
 // ═══════ APPROVAL RULES ═══════
 async function renderRules() {
-  const rules = await api('/api/rules');
+  const rules = await api("/api/rules");
 
-  const ruleCards = rules.map(r => {
-    const icons = { auto_approve: '🤖', percentage: '📊', hybrid: '🔀' };
-    const colors = { auto_approve: 'rgba(16,185,129,0.15)', percentage: 'rgba(99,102,241,0.15)', hybrid: 'rgba(245,158,11,0.15)' };
-    let details = '';
-    if (r.auto_approve_below) details += `Auto-approve below ${formatCurrency(r.auto_approve_below)} `;
-    if (r.percentage_threshold) details += `${r.percentage_threshold}% threshold `;
-    if (r.approver_name) details += `Assigned to ${r.approver_name}`;
+  const ruleCards = rules
+    .map((r) => {
+      const icons = { auto_approve: "🤖", percentage: "📊", hybrid: "🔀" };
+      const colors = {
+        auto_approve: "rgba(16,185,129,0.15)",
+        percentage: "rgba(99,102,241,0.15)",
+        hybrid: "rgba(245,158,11,0.15)",
+      };
+      let details = "";
+      if (r.auto_approve_below)
+        details += `Auto-approve below ${formatCurrency(r.auto_approve_below)} `;
+      if (r.percentage_threshold)
+        details += `${r.percentage_threshold}% threshold `;
+      if (r.approver_name) details += `Assigned to ${r.approver_name}`;
 
-    return `
+      return `
       <div class="rule-card">
-        <div class="rule-icon" style="background:${colors[r.rule_type]}">${icons[r.rule_type] || '⚙️'}</div>
+        <div class="rule-icon" style="background:${colors[r.rule_type]}">${icons[r.rule_type] || "⚙️"}</div>
         <div class="rule-info">
           <div class="rule-name">${r.name}</div>
-          <div class="rule-type">${r.rule_type.replace('_', ' ')} ${details ? '· ' + details : ''}</div>
+          <div class="rule-type">${r.rule_type.replace("_", " ")} ${details ? "· " + details : ""}</div>
         </div>
-        <button class="rule-toggle ${r.is_active ? 'active' : ''}" data-rule-id="${r.id}" data-active="${r.is_active}"></button>
+        <button class="rule-toggle ${r.is_active ? "active" : ""}" data-rule-id="${r.id}" data-active="${r.is_active}"></button>
         <button class="btn btn-secondary btn-sm" style="color:var(--danger)" data-delete-rule="${r.id}">🗑</button>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 
   return `
     <div class="page-header">
@@ -961,40 +1493,49 @@ async function renderRules() {
 }
 
 function bindRuleEvents() {
-  document.querySelectorAll('.rule-toggle').forEach(btn => {
-    btn.addEventListener('click', async () => {
+  document.querySelectorAll(".rule-toggle").forEach((btn) => {
+    btn.addEventListener("click", async () => {
       const ruleId = btn.dataset.ruleId;
-      const isActive = btn.dataset.active === '1';
+      const isActive = btn.dataset.active === "1";
       try {
-        const rules = await api('/api/rules');
-        const rule = rules.find(r => r.id === ruleId);
+        const rules = await api("/api/rules");
+        const rule = rules.find((r) => r.id === ruleId);
         if (rule) {
-          await api(`/api/rules/${ruleId}`, { method: 'PUT', body: JSON.stringify({ ...rule, is_active: isActive ? 0 : 1 }) });
-          showToast(`Rule ${isActive ? 'disabled' : 'enabled'}`, 'success');
-          navigate('rules');
+          await api(`/api/rules/${ruleId}`, {
+            method: "PUT",
+            body: JSON.stringify({ ...rule, is_active: isActive ? 0 : 1 }),
+          });
+          showToast(`Rule ${isActive ? "disabled" : "enabled"}`, "success");
+          navigate("rules");
         }
-      } catch (err) { showToast(err.message, 'error'); }
+      } catch (err) {
+        showToast(err.message, "error");
+      }
     });
   });
 
-  document.querySelectorAll('[data-delete-rule]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Delete this rule?')) return;
+  document.querySelectorAll("[data-delete-rule]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this rule?")) return;
       try {
-        await api(`/api/rules/${btn.dataset.deleteRule}`, { method: 'DELETE' });
-        showToast('Rule deleted', 'success');
-        navigate('rules');
-      } catch (err) { showToast(err.message, 'error'); }
+        await api(`/api/rules/${btn.dataset.deleteRule}`, { method: "DELETE" });
+        showToast("Rule deleted", "success");
+        navigate("rules");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
     });
   });
 
-  document.getElementById('addRuleBtn')?.addEventListener('click', showNewRuleModal);
+  document
+    .getElementById("addRuleBtn")
+    ?.addEventListener("click", showNewRuleModal);
 }
 
 function showNewRuleModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'ruleModal';
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.id = "ruleModal";
   modal.innerHTML = `
     <div class="modal" style="max-width:500px">
       <div class="modal-header">
@@ -1033,81 +1574,276 @@ function showNewRuleModal() {
       </div>
     </div>
   `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
   document.body.appendChild(modal);
 
-  document.getElementById('ruleType')?.addEventListener('change', (e) => {
+  document.getElementById("ruleType")?.addEventListener("change", (e) => {
     const type = e.target.value;
-    document.getElementById('autoApproveField').style.display = (type === 'auto_approve' || type === 'hybrid') ? 'block' : 'none';
-    document.getElementById('percentageField').style.display = (type === 'percentage' || type === 'hybrid') ? 'block' : 'none';
+    document.getElementById("autoApproveField").style.display =
+      type === "auto_approve" || type === "hybrid" ? "block" : "none";
+    document.getElementById("percentageField").style.display =
+      type === "percentage" || type === "hybrid" ? "block" : "none";
   });
 
-  document.getElementById('saveRule')?.addEventListener('click', async () => {
-    const btn = document.getElementById('saveRule');
-    btn.disabled = true; btn.textContent = 'Creating...';
+  document.getElementById("saveRule")?.addEventListener("click", async () => {
+    const btn = document.getElementById("saveRule");
+    btn.disabled = true;
+    btn.textContent = "Creating...";
     try {
-      await api('/api/rules', {
-        method: 'POST',
+      await api("/api/rules", {
+        method: "POST",
         body: JSON.stringify({
-          name: document.getElementById('ruleName').value,
-          rule_type: document.getElementById('ruleType').value,
-          auto_approve_below: parseFloat(document.getElementById('autoApproveBelow').value) || null,
-          percentage_threshold: parseFloat(document.getElementById('percentageThreshold').value) || null,
-          priority: parseInt(document.getElementById('rulePriority').value) || 0
-        })
+          name: document.getElementById("ruleName").value,
+          rule_type: document.getElementById("ruleType").value,
+          auto_approve_below:
+            parseFloat(document.getElementById("autoApproveBelow").value) ||
+            null,
+          percentage_threshold:
+            parseFloat(document.getElementById("percentageThreshold").value) ||
+            null,
+          priority:
+            parseInt(document.getElementById("rulePriority").value) || 0,
+        }),
       });
       modal.remove();
-      showToast('Rule created!', 'success');
-      navigate('rules');
+      showToast("Rule created!", "success");
+      navigate("rules");
     } catch (err) {
-      showToast(err.message, 'error');
-      btn.disabled = false; btn.textContent = 'Create Rule';
+      showToast(err.message, "error");
+      btn.disabled = false;
+      btn.textContent = "Create Rule";
     }
   });
 }
 
+// ═══════ BUDGETS ═══════
+async function renderBudgets() {
+  if (currentUser.role !== "admin")
+    return '<div class="empty-state">No Access</div>';
+  const budgets = await api("/api/budgets");
+
+  const rows = budgets
+    .map((b) => {
+      const isOver = b.spent > b.monthly_limit;
+      const utilPct = Math.min(b.utilization, 100);
+      const color =
+        utilPct >= 90
+          ? "var(--danger)"
+          : utilPct >= 70
+            ? "var(--warning)"
+            : "var(--success)";
+
+      return `
+      <tr>
+        <td class="font-bold">${categoryIcons[b.category] || "📋"} ${b.category}</td>
+        <td class="font-bold">${formatCurrency(b.monthly_limit)}</td>
+        <td style="color:${isOver ? "var(--danger)" : ""}">${formatCurrency(b.spent)} (${b.expense_count})</td>
+        <td style="color:${isOver ? "var(--danger)" : ""}">${isOver ? "-" : formatCurrency(b.remaining)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div class="chart-bar-track" style="flex:1;height:8px;margin:0"><div class="chart-bar-fill" style="width:${utilPct}%;background:${color}"></div></div>
+            <span class="text-xs font-bold" style="min-width:35px">${b.utilization}%</span>
+          </div>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="showBudgetModal('${b.category}', ${b.monthly_limit})">Edit</button>
+          <button class="btn btn-sm btn-danger ml-1" onclick="deleteBudget('${b.id}')">Delete</button>
+        </td>
+      </tr>
+    `;
+    })
+    .join("");
+
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Category Budgets</h1>
+        <p class="page-subtitle">Manage monthly spending limits by category</p>
+      </div>
+      <button class="btn btn-primary" onclick="showBudgetModal()">➕ Add Budget</button>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><span class="table-title">Active Budgets</span></div>
+      ${
+        rows
+          ? `
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Monthly Limit</th>
+              <th>Spent This Month</th>
+              <th>Remaining</th>
+              <th>Utilization</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `
+          : '<div class="empty-state"><div class="empty-state-icon">💸</div><div class="empty-state-text">No budgets set</div></div>'
+      }
+    </div>
+  `;
+}
+
+function bindBudgetEvents() {
+  // Budget actions are inline onclicks (showBudgetModal and deleteBudget)
+}
+
+function showBudgetModal(category = "", currentLimit = "") {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.id = "budgetModal";
+
+  const isEdit = !!category;
+
+  modal.innerHTML = `
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit ? "Edit Budget" : "Set New Budget"}</div>
+        <button class="modal-close" onclick="document.getElementById('budgetModal').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          ${
+            isEdit
+              ? `
+             <input class="form-input" type="text" id="budgetCategory" value="${category}" readonly>
+          `
+              : `
+             <select class="form-select" id="budgetCategory">
+               <option value="Travel">✈️ Travel</option>
+               <option value="Meals">🍽️ Meals</option>
+               <option value="Supplies">📦 Supplies</option>
+               <option value="Equipment">💻 Equipment</option>
+               <option value="Accommodation">🏨 Accommodation</option>
+               <option value="Other">📋 Other</option>
+             </select>
+          `
+          }
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Limit (Amount)</label>
+          <input class="form-input" type="number" id="budgetLimit" value="${currentLimit}" placeholder="e.g. 5000" min="1" step="0.01" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('budgetModal').remove()">Cancel</button>
+        <button class="btn btn-primary" id="saveBudgetBtn">Save Budget</button>
+      </div>
+    </div>
+  `;
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  document.body.appendChild(modal);
+
+  document
+    .getElementById("saveBudgetBtn")
+    .addEventListener("click", async () => {
+      const cat = document.getElementById("budgetCategory").value;
+      const limit = parseFloat(document.getElementById("budgetLimit").value);
+
+      if (!cat || !limit || limit <= 0) {
+        showToast("Please enter a valid amount", "error");
+        return;
+      }
+
+      const btn = document.getElementById("saveBudgetBtn");
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+      try {
+        let rawCat = cat.replace(/[✈️🍽️📦💻🏨📋]/g, "").trim(); // Remove emoji if it's the select
+        if (isEdit) rawCat = cat; // Input is already clean
+
+        await api("/api/budgets", {
+          method: "POST",
+          body: JSON.stringify({ category: rawCat, monthly_limit: limit }),
+        });
+        modal.remove();
+        showToast("Budget saved successfully", "success");
+        renderPage(); // Reload the current page to refresh the budget table
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.textContent = "Save Budget";
+      }
+    });
+}
+
+async function deleteBudget(id) {
+  if (!confirm("Are you sure you want to delete this budget limit?")) return;
+  try {
+    await api(`/api/budgets/${id}`, { method: "DELETE" });
+    showToast("Budget removed", "success");
+    renderPage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+window.showBudgetModal = showBudgetModal;
+window.deleteBudget = deleteBudget;
+
 // ═══════ HISTORY ═══════
 async function renderHistory() {
-  const isManager = currentUser.role === 'admin' || currentUser.role === 'manager';
-  let content = '';
+  const isManager =
+    currentUser.role === "admin" || currentUser.role === "manager";
+  let content = "";
 
   if (isManager) {
-    const history = await api('/api/approvals/history');
-    const rows = history.map(h => `
+    const history = await api("/api/approvals/history");
+    const rows = history
+      .map(
+        (h) => `
       <tr>
         <td class="font-bold">${h.title}</td>
         <td>${h.submitter_name}</td>
         <td class="font-bold">${formatCurrency(h.total_amount, h.currency)}</td>
-        <td>${categoryIcons[h.category] || ''} ${h.category}</td>
+        <td>${categoryIcons[h.category] || ""} ${h.category}</td>
         <td><span class="badge badge--${h.status}"><span class="badge--dot"></span> ${getStatusLabel(h.status)}</span></td>
-        <td class="text-muted">${h.comment || '—'}</td>
+        <td class="text-muted">${h.comment || "—"}</td>
         <td class="text-muted">${formatDate(h.decided_at)}</td>
       </tr>
-    `).join('');
+    `,
+      )
+      .join("");
 
     content = `
       <div class="table-container">
         <div class="table-header"><span class="table-title">My Approval History (${history.length})</span></div>
-        ${rows ? `
+        ${
+          rows
+            ? `
           <table>
             <thead><tr><th>Expense</th><th>Submitter</th><th>Amount</th><th>Category</th><th>Decision</th><th>Comment</th><th>Date</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
-        ` : '<div class="empty-state"><div class="empty-state-icon">📜</div><div class="empty-state-text">No approval history</div></div>'}
+        `
+            : '<div class="empty-state"><div class="empty-state-icon">📜</div><div class="empty-state-text">No approval history</div></div>'
+        }
       </div>
     `;
   }
 
-  const expenses = await api('/api/expenses');
-  const rows = expenses.map(e => `
+  const expenses = await api("/api/expenses");
+  const rows = expenses
+    .map(
+      (e) => `
     <tr class="expense-row" data-expense-id="${e.id}">
       <td class="font-bold">${e.title}</td>
       <td class="font-bold">${formatCurrency(e.total_amount, e.currency)}</td>
-      <td>${categoryIcons[e.category] || ''} ${e.category}</td>
+      <td>${categoryIcons[e.category] || ""} ${e.category}</td>
       <td><span class="badge badge--${e.status}"><span class="badge--dot"></span> ${getStatusLabel(e.status)}</span></td>
       <td class="text-muted">${formatDate(e.created_at)}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <div class="page-header">
@@ -1116,20 +1852,25 @@ async function renderHistory() {
     ${content}
     <div class="table-container mt-2">
       <div class="table-header"><span class="table-title">My Expense History (${expenses.length})</span></div>
-      ${rows ? `
+      ${
+        rows
+          ? `
         <table>
           <thead><tr><th>Expense</th><th>Amount</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-      ` : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expense history</div></div>'}
+      `
+          : '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No expense history</div></div>'
+      }
     </div>
   `;
 }
 
 // ═══════ INIT ═══════
 (async function init() {
-  const app = document.getElementById('app');
-  app.innerHTML = '<div class="loading-page"><div class="spinner"></div><span>Loading ReimburseFlow...</span></div>';
+  const app = document.getElementById("app");
+  app.innerHTML =
+    '<div class="loading-page"><div class="spinner"></div><span>Loading ReimburseFlow...</span></div>';
 
   if (authToken) {
     const authed = await checkAuth();

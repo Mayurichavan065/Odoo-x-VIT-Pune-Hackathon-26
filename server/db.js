@@ -1,18 +1,18 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const Database = require("better-sqlite3");
+const path = require("path");
 
-const DB_PATH = path.join(__dirname, '..', 'data', 'reimburseflow.db');
+const DB_PATH = path.join(__dirname, "..", "data", "reimburseflow.db");
 
 let db;
 
 function getDB() {
   if (!db) {
-    const fs = require('fs');
+    const fs = require("fs");
     const dir = path.dirname(DB_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+    db.pragma("journal_mode = WAL");
+    db.pragma("foreign_keys = ON");
   }
   return db;
 }
@@ -111,6 +111,28 @@ function initDB() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS category_budgets (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      monthly_limit REAL NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (company_id) REFERENCES companies(id),
+      UNIQUE(company_id, category)
+    );
+
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      otp TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
     -- Seed currencies if empty
     INSERT OR IGNORE INTO currencies (code, name, symbol, rate_to_usd) VALUES
       ('USD', 'US Dollar', '$', 1.0),
@@ -125,7 +147,7 @@ function initDB() {
       ('SGD', 'Singapore Dollar', 'S$', 1.34);
   `);
 
-  console.log('  ✅ Database initialized');
+  console.log("  ✅ Database initialized");
 }
 
 module.exports = { getDB, initDB };
